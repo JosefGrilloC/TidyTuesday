@@ -1,0 +1,135 @@
+---
+title: 'Week 4: Board Games'
+author: "Jose F. Grillo"
+date: "25/1/2022"
+output:
+  html_document:
+    toc:  TRUE
+    toc_float: TRUE
+editor_options: 
+  chunk_output_type: console
+---
+
+<style> body {text-align: justify} </style>
+
+```{r Styling, include=FALSE}
+
+options(encoding = 'UTF-8')
+
+```
+
+## Loading the data frame
+
+We first start by loading the dataframe using the recommended input from the [TidyTuesday](https://github.com/rfordatascience/tidytuesday/blob/master/data/2022/2022-01-25/readme.md) webpage:
+
+```{r Loading the data}
+
+#Packages
+require(tidyverse)
+require(ggtext)
+
+#Downloading the data
+tuesdata <- tidytuesdayR::tt_load('2022-01-25')
+
+#Creating the separate dataframes
+ratings <- tuesdata$ratings
+details <- tuesdata$details
+
+```
+
+
+## Lollipop chart with the average of ratings
+
+After reviewing the data and finding out some interesting patterns that can be explored at a later date, I decided to create a simple lollipop chart with the ratings of the board games of the 21^st^ century.
+
+```{r Lollipop chart}
+
+#Average rating
+AVG_rating <- ratings %>%
+  filter(year >= 2000 & year <= 2021) %>%
+  summarize(AVG = mean(average), AVG_Bayes = mean(bayes_average))
+
+#Lollipop plot
+ratings %>%
+  filter(year >= 2000 & year <= 2021) %>%
+  group_by(year) %>%
+  summarize(Number = n(), Avg = mean(average), Avg_bayes = mean(bayes_average)) %>%
+  
+  ggplot() +
+#Creating the segmented overall average line 
+  geom_vline(aes(xintercept = 6.526118), 
+             color = "red", 
+             linetype = 2, 
+             size = 0.5) +
+#Creating the line of the lollipop
+  geom_segment(aes(x = Avg, xend = 6.526118, y = year, yend = year)) +
+#Creating the "point" of the lollipop
+  geom_point(aes(x = Avg, y = year),
+             size = 10,
+             alpha = 0.8) +
+#Creating the label of the lollipop
+  geom_text(aes(x = Avg, y = year, label = signif(Avg, 3)),
+            color = "white",
+            size = 3.5) +
+#Modifying the labs and adding the title, subtitle and caption
+  labs(x = NULL, y = NULL, 
+       title = "Are board games getting better in the new\nmillennium?", 
+       subtitle = "The mean yearly rating of the considered board games\nis higher than the overall average since 2016", 
+       caption = "**Plot:** @JF_Grillo_Bio | **Data:** Kaggle & Board Games Geek (via TidyTuesday)") +
+#Modifying the x axis (breaks)
+  scale_x_continuous(breaks = c(6.0, 6.25, 6.5, 6.75, 7.0, 7.25)) +
+#Modifying the y axis (breaks)
+  scale_y_continuous(breaks = 2000:2021) +
+#Creating the annotations  
+  geom_curve(aes(
+           x = 6.526118,
+           xend = 6.7, 
+           y = 2006.2,
+           yend = 2004.5),
+           arrow = arrow(length = unit(1.78, "mm")), 
+           size = 0.4,
+           curvature = 0.3,
+           color = "red") +
+  
+  annotate(geom = "text",
+           x = 7.05,
+           y = 2004.5,
+           #size = ,
+           color = "black",
+           lineheight = 0.9,
+           label = "Overall average rating = 6.53") +
+  
+  geom_curve(aes(
+           x = 6.38,
+           xend = 6.2, 
+           y = 2014,
+           yend = 2016),
+           arrow = arrow(length = unit(1.78, "mm")), 
+           size = 0.4,
+           curvature = -0.3) +
+  
+  annotate(geom = "text",
+           x = 6.155,
+           y = 2016.5,
+           #size = ,
+           color = "black",
+           lineheight = 0.9,
+           label = "Average rating") +
+#Assigning the theme
+  theme_minimal() +
+#Modifying the theme
+  theme(plot.title = element_text(size = 18, face = "bold"),
+        plot.subtitle = element_text(size = 15),
+        plot.caption = element_markdown(),
+        plot.title.position = "plot",
+        plot.background = element_rect("white"),
+        axis.text.y = element_text(size = 15),
+        axis.text.x = element_blank(),
+        panel.grid = element_blank(),
+        plot.margin = margin(t = 15, r = 15, b = 15, l = 15)
+        )
+
+#ggsave(filename = "TidyTuesday_Boardgame.png", width = 15, height = 20, units = "cm", dpi = 2000)
+
+```
+
